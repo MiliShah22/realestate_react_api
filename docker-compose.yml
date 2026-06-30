@@ -1,0 +1,42 @@
+version: '3.9'
+
+# One-command local infra for development:  docker compose up -d
+# Matches the defaults in .env.example exactly — copy that to .env and
+# `npm run migrate && npm run seed && npm run dev` against this.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: estatiq-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: estatiq
+      POSTGRES_PASSWORD: estatiq_pass
+      POSTGRES_DB: estatiq_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - estatiq_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U estatiq -d estatiq_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: estatiq-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - estatiq_redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  estatiq_pg_data:
+  estatiq_redis_data:

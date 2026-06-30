@@ -1,0 +1,551 @@
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+  user: User!
+}
+
+type CityMetric {
+  city: String!
+  leads: Int!
+  listings: Int!
+  revenuePaise: Int!
+}
+
+input CreateLeadInput {
+  budgetLabel: String
+  contactEmail: String
+  contactName: String!
+  contactPhone: String!
+  message: String
+  propertyId: ID!
+  source: String = "SEARCH"
+}
+
+input CreateTenantInput {
+  billingEmail: String!
+  city: String
+  gstin: String
+  name: String!
+  ownerEmail: String!
+  ownerName: String!
+  ownerPassword: String!
+  ownerPhone: String!
+  phone: String
+  planId: ID!
+}
+
+""" Platform-wide (SUPER_ADMIN) or tenant-scoped (FRANCHISE_OWNER) KPI summary. 
+"""
+type DashboardStats {
+  activeUsers: Int!
+  franchiseCount: Int!
+  monthlyRevenuePaise: Int!
+  newLeads: Int!
+  pendingReviews: Int!
+  totalProperties: Int!
+}
+
+"""ISO-8601 date-time scalar"""
+scalar DateTime
+
+"""Arbitrary JSON value"""
+scalar JSON
+
+type Lead {
+  assignedAgent: User
+  budgetLabel: String
+  budgetPaise: Int
+  city: String
+  contactEmail: String
+  contactName: String!
+  contactPhone: String!
+  contactedAt: DateTime
+  convertedAt: DateTime
+  createdAt: DateTime!
+  customer: User
+  history: [LeadStatusEvent!]!
+  id: ID!
+  internalNotes: String
+  message: String
+  property: Property
+  source: String!
+  status: LeadStatus!
+  tenant: Tenant!
+}
+
+type LeadConnection {
+  items: [Lead!]!
+  pageInfo: PageInfo!
+}
+
+input LeadFilterInput {
+  assignedAgentId: ID
+  city: String
+  propertyId: ID
+  search: String
+  status: LeadStatus
+}
+
+type LeadStats {
+  contacted: Int!
+  converted: Int!
+  followUp: Int!
+  lost: Int!
+  new: Int!
+  total: Int!
+}
+
+enum LeadStatus {
+  CONTACTED
+  CONVERTED
+  FOLLOW_UP
+  LOST
+  NEW
+}
+
+type LeadStatusEvent {
+  changedBy: User
+  createdAt: DateTime!
+  fromStatus: LeadStatus
+  id: ID!
+  note: String
+  toStatus: LeadStatus!
+}
+
+enum ListingTypeEnum {
+  PG
+  RENT
+  SALE
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+  role: UserRole!
+}
+
+type MonthlyMetric {
+  leads: Int!
+  month: String!
+  propertiesListed: Int!
+  revenuePaise: Int!
+}
+
+type Mutation {
+  _empty: String
+  addLeadNote(id: ID!, note: String!): Lead!
+  addPropertyImages(propertyId: ID!, urls: [String!]!): Property!
+  assignLead(agentId: ID!, id: ID!): Lead!
+  changePassword(currentPassword: String!, newPassword: String!): MutationResponse!
+  changeTenantPlan(id: ID!, planId: ID!): Tenant!
+  clearSearchHistory: MutationResponse!
+
+  """ Customer (or guest): submit an enquiry on a property — creates a Lead. 
+  """
+  createLead(input: CreateLeadInput!): Lead!
+
+  """ Franchise staff/owner: create a new listing (starts as DRAFT). """
+  createProperty(input: PropertyInput!): Property!
+  createReview(body: String!, propertyId: ID!, rating: Int!): Review!
+
+  """ SUPER_ADMIN only: onboard a brand-new franchise + its owner account. """
+  createTenant(input: CreateTenantInput!): Tenant!
+  deleteLead(id: ID!): MutationResponse!
+  deleteProperty(id: ID!): MutationResponse!
+  deleteReview(id: ID!): MutationResponse!
+  deleteSavedSearch(id: ID!): MutationResponse!
+
+  """ Franchise owner: invite a staff member into their own tenant. """
+  inviteStaff(email: String!, name: String!, phone: String!): User!
+  login(input: LoginInput!): AuthPayload!
+  logout(refreshToken: String!): MutationResponse!
+  logoutAllSessions: MutationResponse!
+  moderateReview(id: ID!, status: ReviewStatus!): Review!
+  reactivateTenant(id: ID!): Tenant!
+
+  """ Fire-and-forget view counter increment (called on detail page load). """
+  recordPropertyView(propertyId: ID!): MutationResponse!
+  recordSearch(query: JSON!, resultCount: Int): MutationResponse!
+  refreshToken(refreshToken: String!): AuthPayload!
+  removePropertyImage(imageId: ID!): MutationResponse!
+  requestPasswordReset(email: String!): MutationResponse!
+  resendOtp(contact: String!, purpose: String!): MutationResponse!
+  resetPassword(newPassword: String!, token: String!): MutationResponse!
+  saveSearch(alertsEnabled: Boolean = true, label: String, query: JSON!): SavedSearch!
+  setCoverImage(imageId: ID!): MutationResponse!
+  setPropertyFeatured(id: ID!, isFeatured: Boolean!): Property!
+
+  """ Admin only: approve/reject/feature toggles. """
+  setPropertyStatus(id: ID!, reason: String, status: PropertyStatusEnum!): Property!
+  setPropertyVerified(id: ID!, isVerified: Boolean!): Property!
+
+  """ Admin/Franchise-owner only: suspend, activate, or change role of a user. 
+  """
+  setUserStatus(isActive: Boolean!, userId: ID!): User!
+  signup(input: SignupInput!): AuthPayload!
+
+  """ Franchise: submit a DRAFT for admin review. """
+  submitPropertyForReview(id: ID!): Property!
+  suspendTenant(id: ID!, reason: String!): Tenant!
+
+  """ Customer: toggle save/unsave. Returns the new saved state. """
+  toggleSaveProperty(propertyId: ID!): Boolean!
+  toggleSearchAlert(enabled: Boolean!, id: ID!): SavedSearch!
+  updateLeadStatus(id: ID!, note: String, status: LeadStatus!): Lead!
+  updateNotificationPrefs(prefs: JSON!): User!
+  updateProfile(avatarUrl: String, city: String, name: String, phone: String): User!
+  updateProperty(id: ID!, input: PropertyInput!): Property!
+  updateTenant(id: ID!, input: UpdateTenantInput!): Tenant!
+  verifyOtp(code: String!, contact: String!, purpose: String!): MutationResponse!
+}
+
+type MutationResponse {
+  message: String
+  success: Boolean!
+}
+
+""" Generic pagination wrapper used by every list query. """
+type PageInfo {
+  hasNextPage: Boolean!
+  page: Int!
+  pageSize: Int!
+  totalCount: Int!
+}
+
+input PaginationInput {
+  page: Int = 1
+  pageSize: Int = 20
+}
+
+type Plan {
+  code: String!
+  commissionRate: Float!
+  description: String
+  features: JSON!
+  id: ID!
+  isActive: Boolean!
+  maxListings: Int!
+  maxStaffSeats: Int!
+  name: String!
+  priceMonthlyPaise: Int!
+  priceYearlyPaise: Int!
+}
+
+type Property {
+  addressLine: String
+  amenities: [String!]!
+  assignedAgent: User
+  bhk: String
+  builderName: String
+  builtupAreaSqft: Float
+  carpetAreaSqft: Float
+  city: String!
+  createdAt: DateTime!
+  createdBy: User
+  description: String
+  id: ID!
+  images: [PropertyImage!]!
+  isFeatured: Boolean!
+  isVerified: Boolean!
+  latitude: Float
+  leadCount: Int!
+  listingType: ListingTypeEnum!
+  locality: String
+  longitude: Float
+  maintenancePaise: Int
+  pincode: String
+  possessionDate: DateTime
+  possessionStatus: String
+  priceDisplay: String!
+  pricePaise: Int!
+  pricePerSqftPaise: Int
+  propertyType: PropertyTypeEnum!
+  publishedAt: DateTime
+  rating: Float
+  reviewCount: Int!
+  state: String
+  status: PropertyStatusEnum!
+  tenant: Tenant!
+  title: String!
+  viewCount: Int!
+}
+
+type PropertyConnection {
+  items: [Property!]!
+  pageInfo: PageInfo!
+}
+
+input PropertyFilterInput {
+  amenities: [String!]
+  bhk: [String!]
+  city: String
+  isFeatured: Boolean
+  listingType: ListingTypeEnum
+  locality: String
+  maxAreaSqft: Float
+  maxPrice: Int
+  minAreaSqft: Float
+  minPrice: Int
+  possessionStatus: String
+  propertyType: PropertyTypeEnum
+  search: String
+  status: PropertyStatusEnum
+  tenantId: ID
+}
+
+type PropertyImage {
+  altText: String
+  id: ID!
+  isCover: Boolean!
+  sortOrder: Int!
+  url: String!
+}
+
+input PropertyInput {
+  addressLine: String
+  amenities: [String!]
+  assignedAgentId: ID
+  bhk: String
+  builderName: String
+  builtupAreaSqft: Float
+  carpetAreaSqft: Float
+  city: String!
+  description: String
+  latitude: Float
+  listingType: ListingTypeEnum!
+  locality: String
+  longitude: Float
+  maintenancePaise: Int
+  pincode: String
+  possessionDate: DateTime
+  possessionStatus: String
+  pricePaise: Int!
+  propertyType: PropertyTypeEnum!
+  state: String
+  title: String!
+}
+
+enum PropertySortField {
+  CREATED_AT
+  PRICE
+  RATING
+  VIEW_COUNT
+}
+
+input PropertySortInput {
+  direction: SortDirection = DESC
+  field: PropertySortField = CREATED_AT
+}
+
+enum PropertyStatusEnum {
+  ACTIVE
+  ARCHIVED
+  DRAFT
+  INACTIVE
+  PENDING_REVIEW
+  REJECTED
+  SOLD
+}
+
+type PropertyTypeBreakdown {
+  count: Int!
+  percentage: Float!
+  propertyType: PropertyTypeEnum!
+}
+
+enum PropertyTypeEnum {
+  APARTMENT
+  COMMERCIAL
+  OFFICE
+  PG_ROOM
+  PLOT
+  VILLA
+}
+
+type Query {
+  _empty: String
+  cityMetrics: [CityMetric!]!
+  dashboardStats: DashboardStats!
+
+  """ Featured properties for the homepage rail. """
+  featuredProperties(limit: Int = 8): [Property!]!
+  lead(id: ID!): Lead
+  leadStats: LeadStats!
+  leads(filter: LeadFilterInput, pagination: PaginationInput): LeadConnection!
+
+  """ The currently authenticated user, derived from the bearer token. """
+  me: User
+  monthlyMetrics(months: Int = 12): [MonthlyMetric!]!
+
+  """ Customer: enquiries they've personally sent. """
+  myEnquiries(pagination: PaginationInput): LeadConnection!
+  mySavedSearches: [SavedSearch!]!
+  mySearchHistory(limit: Int = 10): [JSON!]!
+
+  """ The tenant of the currently authenticated franchise user. """
+  myTenant: Tenant
+  plan(id: ID!): Plan
+  plans: [Plan!]!
+  properties(filter: PropertyFilterInput, pagination: PaginationInput, sort: PropertySortInput): PropertyConnection!
+  property(id: ID!): Property
+  propertyReviews(pagination: PaginationInput, propertyId: ID!): ReviewConnection!
+  propertyTypeBreakdown: [PropertyTypeBreakdown!]!
+
+  """ SUPER_ADMIN only: commission + subscription revenue, platform-wide. """
+  revenueBreakdown: RevenueBreakdown!
+  reviews(filter: ReviewFilterInput, pagination: PaginationInput): ReviewConnection!
+
+  """ Properties saved by the current customer. """
+  savedProperties(pagination: PaginationInput): PropertyConnection!
+
+  """ Properties similar to a given one (same city + type, excluding itself). 
+  """
+  similarProperties(limit: Int = 4, propertyId: ID!): [Property!]!
+  tenant(id: ID!): Tenant
+
+  """ SUPER_ADMIN/SUPPORT_AGENT only — cross-tenant list. """
+  tenants(pagination: PaginationInput, search: String, status: TenantStatus): TenantConnection!
+
+  """ Platform admin / franchise owner: list users (scoped by RLS). """
+  users(pagination: PaginationInput, role: UserRole, search: String, status: String): UserConnection!
+}
+
+type RevenueBreakdown {
+  commissionRevenuePaise: Int!
+  subscriptionRevenuePaise: Int!
+  totalRevenuePaise: Int!
+}
+
+type Review {
+  body: String!
+  createdAt: DateTime!
+  id: ID!
+  moderatedAt: DateTime
+  moderatedBy: User
+  property: Property!
+  rating: Int!
+  status: ReviewStatus!
+  user: User!
+}
+
+type ReviewConnection {
+  items: [Review!]!
+  pageInfo: PageInfo!
+}
+
+input ReviewFilterInput {
+  minRating: Int
+  propertyId: ID
+  search: String
+  status: ReviewStatus
+}
+
+enum ReviewStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
+type SavedSearch {
+  alertsEnabled: Boolean!
+  createdAt: DateTime!
+  id: ID!
+  label: String
+  lastNotifiedAt: DateTime
+  query: JSON!
+}
+
+input SignupInput {
+  businessName: String
+  city: String
+  email: String!
+  gstin: String
+  name: String!
+  password: String!
+  phone: String!
+  role: UserRole!
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+type Tenant {
+  activeLeadCount: Int!
+  billingEmail: String!
+  city: String
+  commissionRateOverride: Float
+  createdAt: DateTime!
+  currentPeriodEnd: DateTime
+  currentPeriodStart: DateTime
+  effectiveCommissionRate: Float!
+  gstin: String
+  id: ID!
+  listingCount: Int!
+  logoUrl: String
+  monthlyRevenuePaise: Int!
+  name: String!
+  phone: String
+  plan: Plan
+  settings: JSON!
+  slug: String!
+  staffCount: Int!
+  status: TenantStatus!
+  suspendedAt: DateTime
+  suspensionReason: String
+  trialEndsAt: DateTime
+}
+
+type TenantConnection {
+  items: [Tenant!]!
+  pageInfo: PageInfo!
+}
+
+enum TenantStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  SUSPENDED
+  TRIAL
+}
+
+input UpdateTenantInput {
+  city: String
+  commissionRateOverride: Float
+  gstin: String
+  logoUrl: String
+  name: String
+  phone: String
+  planId: ID
+}
+
+type User {
+  avatarUrl: String
+  city: String
+  createdAt: DateTime!
+  email: String!
+  emailVerified: Boolean!
+  id: ID!
+  isActive: Boolean!
+  lastLoginAt: DateTime
+  name: String!
+  notificationPrefs: JSON!
+  phone: String
+  phoneVerified: Boolean!
+  role: UserRole!
+  tenant: Tenant
+}
+
+type UserConnection {
+  items: [User!]!
+  pageInfo: PageInfo!
+}
+
+enum UserRole {
+  CUSTOMER
+  FRANCHISE_OWNER
+  FRANCHISE_STAFF
+  SUPER_ADMIN
+  SUPPORT_AGENT
+}
