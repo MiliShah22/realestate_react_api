@@ -148,6 +148,7 @@ export const propertyResolvers = {
           longitude: input.longitude,
           builder_name: input.builderName,
           amenities: JSON.stringify(input.amenities || []),
+          slug: `${input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`, // simple slug generation
         }).returning('*')
       );
 
@@ -165,6 +166,7 @@ export const propertyResolvers = {
         possessionDate: 'possession_date', addressLine: 'address_line', locality: 'locality', city: 'city',
         state: 'state', pincode: 'pincode', latitude: 'latitude', longitude: 'longitude', builderName: 'builder_name',
         assignedAgentId: 'assigned_agent_id',
+        slug: 'slug',
       };
       for (const [gqlKey, col] of Object.entries(map)) {
         if (input[gqlKey] !== undefined) patch[col] = input[gqlKey];

@@ -17,7 +17,7 @@ export async function up(knex) {
     t.specificType('listing_type', 'listing_type').notNullable().defaultTo('SALE');
     t.specificType('property_type', 'property_type').notNullable();
     t.specificType('status', 'property_status').notNullable().defaultTo('DRAFT');
-
+    t.text('slug').notNullable().unique();  // URL-friendly, auto-generated from title + id
     t.string('bhk', 20);                      // "2 BHK", null for plots/commercial
     t.decimal('carpet_area_sqft', 10, 2);
     t.decimal('builtup_area_sqft', 10, 2);

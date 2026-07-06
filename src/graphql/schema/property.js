@@ -77,6 +77,7 @@ export const propertyTypeDefs = /* GraphQL */ `
 
     publishedAt: DateTime
     createdAt: DateTime!
+    slug:text!
   }
 
   type PropertyConnection {
