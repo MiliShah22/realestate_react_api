@@ -15,6 +15,7 @@ export const leadTypeDefs = /* GraphQL */ `
     changedBy: User
     createdAt: DateTime!
   }
+scalar BigInt
 
   type Lead {
     id: ID!

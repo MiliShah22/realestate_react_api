@@ -50,6 +50,7 @@ scalar DateTime
 
 """Arbitrary JSON value"""
 scalar JSON
+scalar BigInt
 
 type Lead {
   assignedAgent: User
@@ -230,6 +231,7 @@ type Plan {
   priceMonthlyPaise: Int!
   priceYearlyPaise: Int!
 }
+scalar BigInt
 
 type Property {
   addressLine: String

@@ -31,6 +31,7 @@ export const propertyTypeDefs = /* GraphQL */ `
     sortOrder: Int!
     isCover: Boolean!
   }
+scalar BigInt
 
   type Property {
     id: ID!
