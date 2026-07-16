@@ -20,7 +20,29 @@ export const reviewResolvers = {
 
       return { items, pageInfo: buildPageInfo({ page, pageSize, totalCount: Number(countRow.count) }) };
     },
+    myReviews: async (_p, { pagination }, ctx) => {
+      const user = requireAuth(ctx);
+      const { page, pageSize, offset, limit } = paginationArgs(pagination);
 
+      const base = db('reviews').where('user_id', user.id);
+
+      const countRow = await base.clone().count('* as count').first();
+
+      const items = await base
+        .clone()
+        .orderBy('created_at', 'desc')
+        .offset(offset)
+        .limit(limit);
+
+      return {
+        items,
+        pageInfo: buildPageInfo({
+          page,
+          pageSize,
+          totalCount: Number(countRow.count),
+        }),
+      };
+    },
     propertyReviews: async (_p, { propertyId, pagination }) => {
       const { page, pageSize, offset, limit } = paginationArgs(pagination);
       const base = db('reviews').where({ property_id: propertyId, status: 'APPROVED' });

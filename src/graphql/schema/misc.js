@@ -32,6 +32,8 @@ export const reviewTypeDefs = /* GraphQL */ `
   extend type Query {
     reviews(filter: ReviewFilterInput, pagination: PaginationInput): ReviewConnection!
     propertyReviews(propertyId: ID!, pagination: PaginationInput): ReviewConnection!
+    myReviews(pagination: PaginationInput): ReviewConnection!
+
   }
 
   extend type Mutation {

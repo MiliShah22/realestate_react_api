@@ -391,6 +391,8 @@ type Query {
   properties(filter: PropertyFilterInput, pagination: PaginationInput, sort: PropertySortInput): PropertyConnection!
   property(id: ID!): Property
   propertyReviews(pagination: PaginationInput, propertyId: ID!): ReviewConnection!
+  myReviews(pagination: PaginationInput): ReviewConnection!
+
   propertyTypeBreakdown: [PropertyTypeBreakdown!]!
 
   """ SUPER_ADMIN only: commission + subscription revenue, platform-wide. """
@@ -424,7 +426,7 @@ type Review {
   id: ID!
   moderatedAt: DateTime
   moderatedBy: User
-  property: Property!
+  property: Property
   rating: Int!
   status: ReviewStatus!
   user: User!
