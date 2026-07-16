@@ -15,14 +15,29 @@ import db from './connection.js';
  * @param {{ tenantId: string|null, isPlatformAdmin: boolean }} ctx
  * @param {(trx: import('knex').Knex.Transaction) => Promise<any>} fn
  */
+// export async function withTenant(ctx, fn) {
+//   return db.transaction(async (trx) => {
+//     await trx.raw('SET LOCAL app.current_tenant_id = ?', [ctx.tenantId || '']);
+//     await trx.raw('SET LOCAL app.is_platform_admin = ?', [ctx.isPlatformAdmin ? 'true' : 'false']);
+//     return fn(trx);
+//   });
+// }
+
 export async function withTenant(ctx, fn) {
   return db.transaction(async (trx) => {
-    await trx.raw('SET LOCAL app.current_tenant_id = ?', [ctx.tenantId || '']);
-    await trx.raw('SET LOCAL app.is_platform_admin = ?', [ctx.isPlatformAdmin ? 'true' : 'false']);
+    await trx.raw(
+      'SELECT set_config(?, ?, true)',
+      ['app.current_tenant_id', ctx.tenantId || '']
+    );
+
+    await trx.raw(
+      'SELECT set_config(?, ?, true)',
+      ['app.is_platform_admin', ctx.isPlatformAdmin ? 'true' : 'false']
+    );
+
     return fn(trx);
   });
 }
-
 /**
  * Builds the RLS context object from an authenticated request user.
  * Centralized here so the "which roles bypass RLS" rule lives in one place.
