@@ -1,36 +1,23 @@
 import 'dotenv/config';
 
+const DATABASE_URL = process.env.DATABASE_URL;
+const NODE_ENV     = process.env.NODE_ENV || 'development';
+
 /** @type {import('knex').Knex.Config} */
 const config = {
   client: 'pg',
-  // connection: process.env.DATABASE_URL || 'postgresql://estatiq:LHBVtThxzZBbWvCgbt06aSeVAQt1240Q@dpg-d91qlrbsq97s73dni55g-a.oregon-postgres.render.com/estatiq_dev',
-  connection: process.env.DATABASE_URL
-    ? {
-      connectionString: process.env.DATABASE_URL,
-      ssl: {
-        rejectUnauthorized: false,
-      },
-    }
-    : {
-      host: 'dpg-d91qlrbsq97s73dni55g-a.oregon-postgres.render.com',
-      database: 'estatiq_dev',
-      user: 'estatiq',
-      password: 'LHBVtThxzZBbWvCgbt06aSeVAQt1240Q',
-      ssl: {
-        rejectUnauthorized: false,
-      },
-    },
+  connection: DATABASE_URL
+    ? { connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } }
+    : 'postgres://estatiq:estatiq_pass@localhost:5432/estatiq_dev',
   pool: {
     min: Number(process.env.DB_POOL_MIN || 2),
     max: Number(process.env.DB_POOL_MAX || 10),
+    acquireTimeoutMillis: 30000,
+    createTimeoutMillis:  30000,
+    idleTimeoutMillis:    30000,
   },
-  migrations: {
-    directory: './migrations',
-    tableName: 'knex_migrations',
-  },
-  seeds: {
-    directory: './seeds',
-  },
+  migrations: { directory: './migrations', tableName: 'knex_migrations', loadExtensions: ['.js'] },
+  seeds:      { directory: './seeds',      loadExtensions: ['.js'] },
 };
 
 export default config;

@@ -21,7 +21,7 @@ export async function up(knex) {
     t.string('contact_phone', 20).notNullable();
 
     t.string('budget_label', 50);             // "₹1.2Cr" free-text display value
-    t.bigInteger('budget_paise');                 // normalized for sorting/filtering
+    t.integer('budget_paise');                 // normalized for sorting/filtering
     t.string('city', 100);
     t.string('source', 40).notNullable().defaultTo('SEARCH'); // SEARCH | DIRECT | REFERRAL | AD | SOCIAL
     t.text('message');
