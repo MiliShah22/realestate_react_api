@@ -21,9 +21,9 @@ export async function up(knex) {
     t.string('bhk', 20);                      // "2 BHK", null for plots/commercial
     t.decimal('carpet_area_sqft', 10, 2);
     t.decimal('builtup_area_sqft', 10, 2);
-    t.integer('price_paise').notNullable();   // store as integer paise to avoid float issues
-    t.integer('price_per_sqft_paise');
-    t.integer('maintenance_paise');           // monthly maintenance, for rent/apartments
+    t.bigInteger('price_paise').notNullable();   // store as integer paise to avoid float issues
+    t.bigInteger('price_per_sqft_paise');
+    t.bigInteger('maintenance_paise');           // monthly maintenance, for rent/apartments
 
     t.string('possession_status', 40);        // "Ready to Move" | "Under Construction" | "New Launch"
     t.date('possession_date');

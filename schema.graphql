@@ -54,7 +54,7 @@ scalar JSON
 type Lead {
   assignedAgent: User
   budgetLabel: String
-  budgetPaise: Int
+  budgetPaise: BigInt
   city: String
   contactEmail: String
   contactName: String!
@@ -257,7 +257,7 @@ type Property {
   possessionDate: DateTime
   possessionStatus: String
   priceDisplay: String!
-  pricePaise: Int!
+  pricePaise: BigInt!
   pricePerSqftPaise: Int
   propertyType: PropertyTypeEnum!
   publishedAt: DateTime
