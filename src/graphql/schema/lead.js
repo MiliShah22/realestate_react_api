@@ -28,7 +28,7 @@ export const leadTypeDefs = /* GraphQL */ `
     contactPhone: String!
 
     budgetLabel: String
-    budgetPaise: Int
+    budgetPaise: BigInt
     city: String
     source: String!
     message: String

@@ -47,7 +47,7 @@ export const propertyTypeDefs = /* GraphQL */ `
     bhk: String
     carpetAreaSqft: Float
     builtupAreaSqft: Float
-    pricePaise: Int!
+    pricePaise: BigInt!
     priceDisplay: String!          # formatted ₹ string, e.g. "₹1.25 Cr"
     pricePerSqftPaise: Int
     maintenancePaise: Int
