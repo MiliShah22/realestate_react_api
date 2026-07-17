@@ -99,6 +99,23 @@ export const propertyResolvers = {
       return db('properties').where({ id, status: 'ACTIVE' }).whereNull('deleted_at').first() || null;
     },
 
+    // savedProperties: async (_p, { pagination }, ctx) => {
+    //   const user = requireAuth(ctx);
+    //   const { page, pageSize, offset, limit } = paginationArgs(pagination);
+
+    //   const base = db('properties')
+    //     .join('saved_properties', 'saved_properties.property_id', 'properties.id')
+    //     .where('saved_properties.user_id', user.id)
+    //     .whereNull('properties.deleted_at')
+    //     .select('properties.*');
+
+    //   const countRow = await base.clone().count('properties.id as count').first();
+    //   const items    = await base.clone()
+    //     .orderBy('saved_properties.created_at', 'desc')
+    //     .offset(offset).limit(limit);
+
+    //   return { items, pageInfo: buildPageInfo({ page, pageSize, totalCount: Number(countRow.count) }) };
+    // },
     savedProperties: async (_p, { pagination }, ctx) => {
       const user = requireAuth(ctx);
       const { page, pageSize, offset, limit } = paginationArgs(pagination);
@@ -106,15 +123,29 @@ export const propertyResolvers = {
       const base = db('properties')
         .join('saved_properties', 'saved_properties.property_id', 'properties.id')
         .where('saved_properties.user_id', user.id)
-        .whereNull('properties.deleted_at')
-        .select('properties.*');
+        .whereNull('properties.deleted_at');
 
-      const countRow = await base.clone().count('properties.id as count').first();
-      const items    = await base.clone()
+      const countRow = await base
+        .clone()
+        .clearSelect()
+        .count('properties.id as count')
+        .first();
+
+      const items = await base
+        .clone()
+        .select('properties.*')
         .orderBy('saved_properties.created_at', 'desc')
-        .offset(offset).limit(limit);
+        .offset(offset)
+        .limit(limit);
 
-      return { items, pageInfo: buildPageInfo({ page, pageSize, totalCount: Number(countRow.count) }) };
+      return {
+        items,
+        pageInfo: buildPageInfo({
+          page,
+          pageSize,
+          totalCount: Number(countRow.count),
+        }),
+      };
     },
 
     featuredProperties: async (_p, { limit = 8 }) =>
