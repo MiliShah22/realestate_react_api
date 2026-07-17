@@ -166,7 +166,12 @@ scalar BigInt
 
     """ Properties similar to a given one (same city + type, excluding itself). """
     similarProperties(propertyId: ID!, limit: Int = 4): [Property!]!
-  }
+
+     propertyTypeCounts: [PropertyTypeCount!]!
+
+      """ Public: cities with the most ACTIVE listings, for homepage tiles. """
+      topCities(limit: Int = 8): [CityListingCount!]!
+    }
 
   extend type Mutation {
     """ Franchise staff/owner: create a new listing (starts as DRAFT). """
@@ -192,9 +197,5 @@ scalar BigInt
     """ Fire-and-forget view counter increment (called on detail page load). """
     recordPropertyView(propertyId: ID!): MutationResponse!
 
-     propertyTypeCounts: [PropertyTypeCount!]!
-
-  """ Public: cities with the most ACTIVE listings, for homepage tiles. """
-  topCities(limit: Int = 8): [CityListingCount!]!
   }
 `;
