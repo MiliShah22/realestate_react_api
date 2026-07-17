@@ -34,6 +34,7 @@ input CreateTenantInput {
   planId: ID!
 }
 
+
 """ Platform-wide (SUPER_ADMIN) or tenant-scoped (FRANCHISE_OWNER) KPI summary. 
 """
 type DashboardStats {
@@ -44,6 +45,14 @@ type DashboardStats {
   pendingReviews: Int!
   totalProperties: Int!
 }
+
+type CustomerDashboardStats {
+  savedProperties: Int!
+  enquiriesSent: Int!
+  convertedLeads: Int!
+  activeAlerts: Int!
+}
+
 
 """ISO-8601 date-time scalar"""
 scalar DateTime
@@ -368,6 +377,7 @@ type Query {
   _empty: String
   cityMetrics: [CityMetric!]!
   dashboardStats: DashboardStats!
+  customerDashboardStats: CustomerDashboardStats!
 
   """ Featured properties for the homepage rail. """
   featuredProperties(limit: Int = 8): [Property!]!

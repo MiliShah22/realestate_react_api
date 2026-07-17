@@ -77,6 +77,12 @@ export const reportTypeDefs = /* GraphQL */ `
     franchiseCount: Int!         # platform-only; 0 for tenant scope
     newLeads: Int!
   }
+  type CustomerDashboardStats {
+    savedProperties: Int!
+    enquiriesSent: Int!
+    convertedLeads: Int!
+    activeAlerts: Int!
+  }
 
   type MonthlyMetric {
     month: String!
@@ -100,6 +106,8 @@ export const reportTypeDefs = /* GraphQL */ `
 
   extend type Query {
     dashboardStats: DashboardStats!
+    customerDashboardStats: CustomerDashboardStats!
+
     monthlyMetrics(months: Int = 12): [MonthlyMetric!]!
     cityMetrics: [CityMetric!]!
     propertyTypeBreakdown: [PropertyTypeBreakdown!]!

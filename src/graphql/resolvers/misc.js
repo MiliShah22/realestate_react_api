@@ -90,6 +90,38 @@ export const reportResolvers = {
      * (tenant-scoped, when called by FRANCHISE_OWNER/STAFF) — same query
      * shape either way; RLS does the scoping for tenant-bound tables.
      */
+    customerDashboardStats: async (_p, _a, ctx) => {
+      const user = requireRole(ctx, ['CUSTOMER']);
+
+      const [
+        savedRow,
+        leadsRow,
+        convertedRow,
+      ] = await Promise.all([
+        db('saved_properties')
+          .where('user_id', user.id)
+          .count('* as c')
+          .first(),
+
+        db('leads')
+          .where('customer_id', user.id)
+          .count('* as c')
+          .first(),
+
+        db('leads')
+          .where('customer_id', user.id)
+          .where('status', 'CONVERTED')
+          .count('* as c')
+          .first(),
+      ]);
+
+      return {
+        savedProperties: Number(savedRow.c),
+        enquiriesSent: Number(leadsRow.c),
+        convertedLeads: Number(convertedRow.c),
+        activeAlerts: 0,
+      };
+    },
     dashboardStats: async (_p, _a, ctx) => {
       const user = requireRole(ctx, [...PLATFORM_ROLES, ...FRANCHISE_ROLES]);
       const isPlatform = PLATFORM_ROLES.includes(user.role);
@@ -107,8 +139,8 @@ export const reportResolvers = {
         isPlatform
           ? db('commission_ledger').where('created_at', '>=', db.raw("date_trunc('month', now())")).sum('commission_paise as sum').first()
           : withTenant(ctx.rls, (trx) =>
-              trx('commission_ledger').where('created_at', '>=', trx.raw("date_trunc('month', now())")).sum('commission_paise as sum').first()
-            ),
+            trx('commission_ledger').where('created_at', '>=', trx.raw("date_trunc('month', now())")).sum('commission_paise as sum').first()
+          ),
       ]);
 
       return {
