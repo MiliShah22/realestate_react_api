@@ -191,5 +191,10 @@ scalar BigInt
 
     """ Fire-and-forget view counter increment (called on detail page load). """
     recordPropertyView(propertyId: ID!): MutationResponse!
+
+     propertyTypeCounts: [PropertyTypeCount!]!
+
+  """ Public: cities with the most ACTIVE listings, for homepage tiles. """
+  topCities(limit: Int = 8): [CityListingCount!]!
   }
 `;
