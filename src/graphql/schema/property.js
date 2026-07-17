@@ -8,6 +8,16 @@ export const propertyTypeDefs = /* GraphQL */ `
     SOLD
     ARCHIVED
   }
+  type PropertyTypeCount {
+    propertyType: PropertyTypeEnum!
+    label: String!
+    count: Int!
+  }
+
+  type CityListingCount {
+    city: String!
+    count: Int!
+  }
 
   enum ListingTypeEnum {
     SALE

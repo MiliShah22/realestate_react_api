@@ -23,6 +23,15 @@ function applyPropertyFilters(q, filter = {}) {
   return q;
 }
 
+const PROPERTY_TYPE_LABELS = {
+  APARTMENT: 'Apartment',
+  VILLA: 'Villa',
+  PLOT: 'Plot / Land',
+  COMMERCIAL: 'Commercial',
+  OFFICE: 'Office Space',
+  PG_ROOM: 'PG / Co-living',
+};
+
 const SORT_COLUMN = {
   PRICE: 'price_paise',
   CREATED_AT: 'created_at',
@@ -85,7 +94,34 @@ export const propertyResolvers = {
 
       return { items, pageInfo: buildPageInfo({ page, pageSize, totalCount }) };
     },
+    propertyTypeCounts: async () => {
+      const rows = await db('properties')
+        .select('property_type')
+        .count('* as count')
+        .where({ status: 'ACTIVE' })
+        .whereNull('deleted_at')
+        .groupBy('property_type')
+        .orderBy('count', 'desc');
 
+      return rows.map((r) => ({
+        propertyType: r.property_type,
+        count: Number(r.count),
+      }));
+    },
+
+    topCities: async (_p, { limit = 8 }) => {
+      const rows = await db('properties')
+        .select('city')
+        .count('* as count')
+        .where({ status: 'ACTIVE' })
+        .whereNull('deleted_at')
+        .whereNotNull('city')
+        .groupBy('city')
+        .orderBy('count', 'desc')
+        .limit(limit);
+
+      return rows.map((r) => ({ city: r.city, count: Number(r.count) }));
+    },
     property: async (_p, { id }, ctx) => {
       const isStaff = ctx.user &&
         (PLATFORM_ROLES.includes(ctx.user.role) || FRANCHISE_ROLES.includes(ctx.user.role));
@@ -344,6 +380,9 @@ export const propertyResolvers = {
       await db('properties').where('id', propertyId).increment('view_count', 1);
       return { success: true };
     },
+  },
+  PropertyTypeCount: {
+    label: (r) => PROPERTY_TYPE_LABELS[r.propertyType] || r.propertyType,
   },
 
   Property: {
