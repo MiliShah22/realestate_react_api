@@ -5,29 +5,29 @@ import { requireAuth, requireRole, PLATFORM_ROLES, FRANCHISE_ROLES } from '../co
 import { paginationArgs, buildPageInfo, formatPaiseToInr } from '../../utils/format.js';
 
 function applyPropertyFilters(q, filter = {}) {
-  if (filter.city)             q = q.andWhereILike('city', `%${filter.city}%`);
-  if (filter.locality)         q = q.andWhereILike('locality', `%${filter.locality}%`);
-  if (filter.listingType)      q = q.andWhere('listing_type', filter.listingType);
-  if (filter.propertyType)     q = q.andWhere('property_type', filter.propertyType);
-  if (filter.bhk?.length)      q = q.whereIn('bhk', filter.bhk);
+  if (filter.city) q = q.andWhereILike('city', `%${filter.city}%`);
+  if (filter.locality) q = q.andWhereILike('locality', `%${filter.locality}%`);
+  if (filter.listingType) q = q.andWhere('listing_type', filter.listingType);
+  if (filter.propertyType) q = q.andWhere('property_type', filter.propertyType);
+  if (filter.bhk?.length) q = q.whereIn('bhk', filter.bhk);
   if (filter.minPrice != null) q = q.andWhere('price_paise', '>=', filter.minPrice);
   if (filter.maxPrice != null) q = q.andWhere('price_paise', '<=', filter.maxPrice);
   if (filter.minAreaSqft != null) q = q.andWhere('carpet_area_sqft', '>=', filter.minAreaSqft);
   if (filter.maxAreaSqft != null) q = q.andWhere('carpet_area_sqft', '<=', filter.maxAreaSqft);
   if (filter.possessionStatus) q = q.andWhere('possession_status', filter.possessionStatus);
   if (filter.isFeatured != null) q = q.andWhere('is_featured', filter.isFeatured);
-  if (filter.status)           q = q.andWhere('status', filter.status);
-  if (filter.tenantId)         q = q.andWhere('tenant_id', filter.tenantId);
+  if (filter.status) q = q.andWhere('status', filter.status);
+  if (filter.tenantId) q = q.andWhere('tenant_id', filter.tenantId);
   if (filter.amenities?.length) q = q.andWhereRaw(`amenities @> ?::jsonb`, [JSON.stringify(filter.amenities)]);
-  if (filter.search)           q = q.andWhereRaw(`search_vector @@ plainto_tsquery('english', ?)`, [filter.search]);
+  if (filter.search) q = q.andWhereRaw(`search_vector @@ plainto_tsquery('english', ?)`, [filter.search]);
   return q;
 }
 
 const SORT_COLUMN = {
-  PRICE:      'price_paise',
+  PRICE: 'price_paise',
   CREATED_AT: 'created_at',
   VIEW_COUNT: 'view_count',
-  RATING:     'rating',
+  RATING: 'rating',
 };
 
 export const propertyResolvers = {
@@ -43,7 +43,7 @@ export const propertyResolvers = {
      */
     properties: async (_p, { filter = {}, sort, pagination }, ctx) => {
       const { page, pageSize, offset, limit } = paginationArgs(pagination);
-      const sortCol   = SORT_COLUMN[sort?.field || 'CREATED_AT'];
+      const sortCol = SORT_COLUMN[sort?.field || 'CREATED_AT'];
       const direction = (sort?.direction || 'DESC').toLowerCase();
 
       const isStaff = ctx.user &&
@@ -71,16 +71,16 @@ export const propertyResolvers = {
         const result = await withTenant(ctx.rls, async (trx) => {
           const q = buildQ(trx);
           const countRow = await q.clone().count('* as count').first();
-          const rows     = await q.clone().orderBy(sortCol, direction).offset(offset).limit(limit);
+          const rows = await q.clone().orderBy(sortCol, direction).offset(offset).limit(limit);
           return { items: rows, totalCount: Number(countRow.count) };
         });
         totalCount = result.totalCount;
-        items      = result.items;
+        items = result.items;
       } else {
-        const q        = buildQ(db);
+        const q = buildQ(db);
         const countRow = await q.clone().count('* as count').first();
-        items          = await q.clone().orderBy(sortCol, direction).offset(offset).limit(limit);
-        totalCount     = Number(countRow.count);
+        items = await q.clone().orderBy(sortCol, direction).offset(offset).limit(limit);
+        totalCount = Number(countRow.count);
       }
 
       return { items, pageInfo: buildPageInfo({ page, pageSize, totalCount }) };
@@ -123,17 +123,18 @@ export const propertyResolvers = {
       const base = db('properties')
         .join('saved_properties', 'saved_properties.property_id', 'properties.id')
         .where('saved_properties.user_id', user.id)
-        .whereNull('properties.deleted_at');
+        .whereNull('properties.deleted_at')
+        .select('properties.*');
 
       const countRow = await base
         .clone()
         .clearSelect()
+        .clearOrder()
         .count('properties.id as count')
         .first();
 
       const items = await base
         .clone()
-        .select('properties.*')
         .orderBy('saved_properties.created_at', 'desc')
         .offset(offset)
         .limit(limit);
@@ -171,7 +172,7 @@ export const propertyResolvers = {
       const user = requireRole(ctx, FRANCHISE_ROLES);
 
       const tenant = await db('tenants').where('id', user.tenantId).first();
-      const plan   = await db('plans').where('id', tenant.plan_id).first();
+      const plan = await db('plans').where('id', tenant.plan_id).first();
       const countRow = await db('properties')
         .where({ tenant_id: user.tenantId }).whereNull('deleted_at').count('* as c').first();
 
@@ -184,30 +185,30 @@ export const propertyResolvers = {
 
       const [property] = await withTenant(ctx.rls, (trx) =>
         trx('properties').insert({
-          tenant_id:          user.tenantId,
-          created_by:         user.id,
-          assigned_agent_id:  input.assignedAgentId || user.id,
-          title:              input.title,
-          description:        input.description,
-          listing_type:       input.listingType,
-          property_type:      input.propertyType,
-          status:             'DRAFT',
-          bhk:                input.bhk,
-          carpet_area_sqft:   input.carpetAreaSqft,
-          builtup_area_sqft:  input.builtupAreaSqft,
-          price_paise:        input.pricePaise,
-          maintenance_paise:  input.maintenancePaise,
-          possession_status:  input.possessionStatus,
-          possession_date:    input.possessionDate,
-          address_line:       input.addressLine,
-          locality:           input.locality,
-          city:               input.city,
-          state:              input.state,
-          pincode:            input.pincode,
-          latitude:           input.latitude,
-          longitude:          input.longitude,
-          builder_name:       input.builderName,
-          amenities:          JSON.stringify(input.amenities || []),
+          tenant_id: user.tenantId,
+          created_by: user.id,
+          assigned_agent_id: input.assignedAgentId || user.id,
+          title: input.title,
+          description: input.description,
+          listing_type: input.listingType,
+          property_type: input.propertyType,
+          status: 'DRAFT',
+          bhk: input.bhk,
+          carpet_area_sqft: input.carpetAreaSqft,
+          builtup_area_sqft: input.builtupAreaSqft,
+          price_paise: input.pricePaise,
+          maintenance_paise: input.maintenancePaise,
+          possession_status: input.possessionStatus,
+          possession_date: input.possessionDate,
+          address_line: input.addressLine,
+          locality: input.locality,
+          city: input.city,
+          state: input.state,
+          pincode: input.pincode,
+          latitude: input.latitude,
+          longitude: input.longitude,
+          builder_name: input.builderName,
+          amenities: JSON.stringify(input.amenities || []),
         }).returning('*')
       );
 
@@ -219,26 +220,26 @@ export const propertyResolvers = {
 
       const patch = {};
       const MAP = {
-        title:             'title',
-        description:       'description',
-        listingType:       'listing_type',
-        propertyType:      'property_type',
-        bhk:               'bhk',
-        carpetAreaSqft:    'carpet_area_sqft',
-        builtupAreaSqft:   'builtup_area_sqft',
-        pricePaise:        'price_paise',
-        maintenancePaise:  'maintenance_paise',
-        possessionStatus:  'possession_status',
-        possessionDate:    'possession_date',
-        addressLine:       'address_line',
-        locality:          'locality',
-        city:              'city',
-        state:             'state',
-        pincode:           'pincode',
-        latitude:          'latitude',
-        longitude:         'longitude',
-        builderName:       'builder_name',
-        assignedAgentId:   'assigned_agent_id',
+        title: 'title',
+        description: 'description',
+        listingType: 'listing_type',
+        propertyType: 'property_type',
+        bhk: 'bhk',
+        carpetAreaSqft: 'carpet_area_sqft',
+        builtupAreaSqft: 'builtup_area_sqft',
+        pricePaise: 'price_paise',
+        maintenancePaise: 'maintenance_paise',
+        possessionStatus: 'possession_status',
+        possessionDate: 'possession_date',
+        addressLine: 'address_line',
+        locality: 'locality',
+        city: 'city',
+        state: 'state',
+        pincode: 'pincode',
+        latitude: 'latitude',
+        longitude: 'longitude',
+        builderName: 'builder_name',
+        assignedAgentId: 'assigned_agent_id',
       };
       for (const [gqlKey, col] of Object.entries(MAP)) {
         if (input[gqlKey] !== undefined) patch[col] = input[gqlKey];
@@ -273,19 +274,19 @@ export const propertyResolvers = {
     setPropertyStatus: async (_p, { id, status, reason }, ctx) => {
       requireRole(ctx, PLATFORM_ROLES);
       const before = await db('properties').where('id', id).first();
-      const patch  = { status };
+      const patch = { status };
       if (status === 'ACTIVE' && !before.published_at) patch.published_at = db.fn.now();
 
       const [updated] = await db('properties').where('id', id).update(patch).returning('*');
       await db('audit_logs').insert({
-        tenant_id:    updated.tenant_id,
-        actor_id:     ctx.user.id,
-        actor_role:   ctx.user.role,
-        action:       'property.status_changed',
-        entity_type:  'property',
-        entity_id:    id,
+        tenant_id: updated.tenant_id,
+        actor_id: ctx.user.id,
+        actor_role: ctx.user.role,
+        action: 'property.status_changed',
+        entity_type: 'property',
+        entity_id: id,
         before_state: { status: before.status },
-        after_state:  { status, reason },
+        after_state: { status, reason },
       });
       return updated;
     },
@@ -346,39 +347,39 @@ export const propertyResolvers = {
   },
 
   Property: {
-    tenant:          (p, _a, ctx) => ctx.loaders.tenantById.load(p.tenant_id),
-    createdBy:       (p, _a, ctx) => p.created_by        ? ctx.loaders.userById.load(p.created_by)         : null,
-    assignedAgent:   (p, _a, ctx) => p.assigned_agent_id ? ctx.loaders.userById.load(p.assigned_agent_id)  : null,
-    listingType:     (p) => p.listing_type,
-    propertyType:    (p) => p.property_type,
-    carpetAreaSqft:  (p) => p.carpet_area_sqft  != null ? Number(p.carpet_area_sqft)  : null,
+    tenant: (p, _a, ctx) => ctx.loaders.tenantById.load(p.tenant_id),
+    createdBy: (p, _a, ctx) => p.created_by ? ctx.loaders.userById.load(p.created_by) : null,
+    assignedAgent: (p, _a, ctx) => p.assigned_agent_id ? ctx.loaders.userById.load(p.assigned_agent_id) : null,
+    listingType: (p) => p.listing_type,
+    propertyType: (p) => p.property_type,
+    carpetAreaSqft: (p) => p.carpet_area_sqft != null ? Number(p.carpet_area_sqft) : null,
     builtupAreaSqft: (p) => p.builtup_area_sqft != null ? Number(p.builtup_area_sqft) : null,
-    pricePaise:      (p) => p.price_paise,
-    priceDisplay:    (p) => formatPaiseToInr(p.price_paise),
-    pricePerSqftPaise:(p) => p.price_per_sqft_paise,
-    maintenancePaise:(p) => p.maintenance_paise,
-    possessionStatus:(p) => p.possession_status,
-    possessionDate:  (p) => p.possession_date,
-    addressLine:     (p) => p.address_line,
-    builderName:     (p) => p.builder_name,
-    rating:          (p) => p.rating != null ? Number(p.rating) : null,
+    pricePaise: (p) => p.price_paise,
+    priceDisplay: (p) => formatPaiseToInr(p.price_paise),
+    pricePerSqftPaise: (p) => p.price_per_sqft_paise,
+    maintenancePaise: (p) => p.maintenance_paise,
+    possessionStatus: (p) => p.possession_status,
+    possessionDate: (p) => p.possession_date,
+    addressLine: (p) => p.address_line,
+    builderName: (p) => p.builder_name,
+    rating: (p) => p.rating != null ? Number(p.rating) : null,
     reviewCount: async (p, _a, ctx) => {
       const stats = await ctx.loaders.reviewCountByPropertyId.load(p.id);
       return Number(stats?.count) || 0;
     },
-    isFeatured:  (p) => p.is_featured,
-    isVerified:  (p) => p.is_verified,
-    viewCount:   (p) => p.view_count,
-    leadCount:   (p, _a, ctx) => ctx.loaders.leadCountByPropertyId.load(p.id),
-    amenities:   (p) => Array.isArray(p.amenities) ? p.amenities : JSON.parse(p.amenities || '[]'),
-    images:      (p, _a, ctx) => ctx.loaders.imagesByPropertyId.load(p.id),
+    isFeatured: (p) => p.is_featured,
+    isVerified: (p) => p.is_verified,
+    viewCount: (p) => p.view_count,
+    leadCount: (p, _a, ctx) => ctx.loaders.leadCountByPropertyId.load(p.id),
+    amenities: (p) => Array.isArray(p.amenities) ? p.amenities : JSON.parse(p.amenities || '[]'),
+    images: (p, _a, ctx) => ctx.loaders.imagesByPropertyId.load(p.id),
     publishedAt: (p) => p.published_at,
-    createdAt:   (p) => p.created_at,
+    createdAt: (p) => p.created_at,
   },
 
   PropertyImage: {
-    altText:   (i) => i.alt_text,
+    altText: (i) => i.alt_text,
     sortOrder: (i) => i.sort_order,
-    isCover:   (i) => i.is_cover,
+    isCover: (i) => i.is_cover,
   },
 };
