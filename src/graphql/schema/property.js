@@ -171,6 +171,11 @@ scalar BigInt
 
       """ Public: cities with the most ACTIVE listings, for homepage tiles. """
       topCities(limit: Int = 8): [CityListingCount!]!
+       """ Public: distinct BHK configurations across ACTIVE listings, for the search filter sidebar. """
+    bhkOptions: [String!]!
+
+    """ Public: distinct possession-status labels across ACTIVE listings. """
+    possessionStatusOptions: [String!]!
     }
 
   extend type Mutation {

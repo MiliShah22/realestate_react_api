@@ -201,6 +201,33 @@ export const propertyResolvers = {
         .whereNull('deleted_at')
         .limit(limit);
     },
+    bhkOptions: async () => {
+      const rows = await db('properties')
+        .distinct('bhk')
+        .where({ status: 'ACTIVE' })
+        .whereNull('deleted_at')
+        .whereNotNull('bhk');
+
+      const order = ['1 BHK', '2 BHK', '3 BHK', '4 BHK', '4+ BHK', 'Studio', 'Private', 'Shared'];
+      return rows
+        .map((r) => r.bhk)
+        .sort((a, b) => {
+          const ai = order.indexOf(a), bi = order.indexOf(b);
+          if (ai === -1 && bi === -1) return a.localeCompare(b);
+          if (ai === -1) return 1;
+          if (bi === -1) return -1;
+          return ai - bi;
+        });
+    },
+
+    possessionStatusOptions: async () => {
+      const rows = await db('properties')
+        .distinct('possession_status')
+        .where({ status: 'ACTIVE' })
+        .whereNull('deleted_at')
+        .whereNotNull('possession_status');
+      return rows.map((r) => r.possession_status).filter(Boolean).sort();
+    },
   },
 
   Mutation: {
