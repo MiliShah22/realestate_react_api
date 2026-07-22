@@ -90,6 +90,14 @@ export const reportTypeDefs = /* GraphQL */ `
     leads: Int!
     propertiesListed: Int!
   }
+     """ Public: platform-wide counters for the homepage hero stats. """
+  type PlatformStats {
+    totalProperties: Int!
+    totalCities: Int!
+    totalBuyers: Int!
+    totalAgents: Int!
+  }
+
 
   type CityMetric {
     city: String!
@@ -105,6 +113,18 @@ export const reportTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
+    dashboardStats: DashboardStats!
+    customerDashboardStats: CustomerDashboardStats!
+
+    monthlyMetrics(months: Int = 12): [MonthlyMetric!]!
+    cityMetrics: [CityMetric!]!
+    propertyTypeBreakdown: [PropertyTypeBreakdown!]!
+
+    """ SUPER_ADMIN only: commission + subscription revenue, platform-wide. """
+    revenueBreakdown: RevenueBreakdown!
+      """ Public: homepage hero counters — no auth required. """
+    platformStats: PlatformStats!
+
     dashboardStats: DashboardStats!
     customerDashboardStats: CustomerDashboardStats!
 

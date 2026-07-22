@@ -85,6 +85,34 @@ export const savedSearchResolvers = {
 export const reportResolvers = {
   Query: {
     /**
+     * PUBLIC — powers the homepage hero stat strip. No auth, no RLS:
+     * counts span all tenants' ACTIVE listings and all user roles.
+     */
+    platformStats: async () => {
+      const [propRow, cityRow, buyerRow, agentRow] = await Promise.all([
+        db('properties').where({ status: 'ACTIVE' }).whereNull('deleted_at').count('* as c').first(),
+        db('properties')
+          .where({ status: 'ACTIVE' })
+          .whereNull('deleted_at')
+          .whereNotNull('city')
+          .countDistinct('city as c')
+          .first(),
+        db('users').where({ role: 'CUSTOMER' }).whereNull('deleted_at').count('* as c').first(),
+        db('users')
+          .whereIn('role', ['FRANCHISE_OWNER', 'FRANCHISE_STAFF'])
+          .whereNull('deleted_at')
+          .count('* as c')
+          .first(),
+      ]);
+
+      return {
+        totalProperties: Number(propRow.c),
+        totalCities: Number(cityRow.c),
+        totalBuyers: Number(buyerRow.c),
+        totalAgents: Number(agentRow.c),
+      };
+    },
+    /**
      * Powers both the admin panel Dashboard (platform-wide, when called by
      * SUPER_ADMIN/SUPPORT_AGENT) and the franchise Dashboard overview cards
      * (tenant-scoped, when called by FRANCHISE_OWNER/STAFF) — same query
