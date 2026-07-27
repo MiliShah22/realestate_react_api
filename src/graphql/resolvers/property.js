@@ -9,8 +9,12 @@ function applyPropertyFilters(q, filter = {}) {
   if (filter.locality) q = q.andWhereILike('locality', `%${filter.locality}%`);
   if (filter.listingType) q = q.andWhere('listing_type', filter.listingType);
   if (filter.propertyType) q = q.andWhere('property_type', filter.propertyType);
-  if (filter.bhk?.length) q = q.whereIn('bhk', filter.bhk);
-  if (filter.minPrice != null) q = q.andWhere('price_paise', '>=', filter.minPrice);
+  if (filter.bhk?.length) {
+    q = q.whereRaw(
+      'LOWER(TRIM(bhk)) IN (' + filter.bhk.map(() => '?').join(',') + ')',
+      filter.bhk.map((b) => b.trim().toLowerCase())
+    );
+  } if (filter.minPrice != null) q = q.andWhere('price_paise', '>=', filter.minPrice);
   if (filter.maxPrice != null) q = q.andWhere('price_paise', '<=', filter.maxPrice);
   if (filter.minAreaSqft != null) q = q.andWhere('carpet_area_sqft', '>=', filter.minAreaSqft);
   if (filter.maxAreaSqft != null) q = q.andWhere('carpet_area_sqft', '<=', filter.maxAreaSqft);
