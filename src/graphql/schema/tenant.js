@@ -19,6 +19,8 @@ export const tenantTypeDefs = /* GraphQL */ `
     commissionRate: Float!
     features: JSON!
     isActive: Boolean!
+     maxStaff: Int!            # convenience alias of maxStaffSeats
+  commissionPercent: Float! # convenience alias of commissionRate
   }
 
   type Tenant {
@@ -47,6 +49,8 @@ export const tenantTypeDefs = /* GraphQL */ `
     activeLeadCount: Int!
     staffCount: Int!
     monthlyRevenuePaise: Int!
+      ownerCount: Int!
+
   }
 
   type TenantConnection {

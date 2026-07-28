@@ -209,6 +209,14 @@ export const tenantResolvers = {
         .sum('commission_paise as sum').first();
       return Number(row.sum) || 0;
     },
+    // ...existing resolvers...
+    ownerCount: async (t) => {
+      const row = await db('users')
+        .where({ tenant_id: t.id, role: 'FRANCHISE_OWNER' })
+        .whereNull('deleted_at')
+        .count('* as c').first();
+      return Number(row.c);
+    },
   },
 
   Plan: {
@@ -218,5 +226,8 @@ export const tenantResolvers = {
     maxStaffSeats: (p) => p.max_staff_seats,
     commissionRate: (p) => Number(p.commission_rate),
     isActive: (p) => p.is_active,
+    // ...existing resolvers...
+    maxStaff: (p) => p.max_staff_seats,
+    commissionPercent: (p) => Number(p.commission_rate),
   },
 };

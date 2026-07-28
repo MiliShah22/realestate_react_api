@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import db from '../../db/connection.js';
 import { withTenant } from '../../db/withTenant.js';
-import { requireAuth, requireRole, PLATFORM_ROLES } from '../context.js';
+import { requireAuth, requireRole, PLATFORM_ROLES, FRANCHISE_ROLES } from '../context.js';
 import { hashPassword, verifyPassword, checkPasswordStrength } from '../../utils/password.js';
 import { signAccessToken, generateRefreshToken, hashToken, refreshTokenExpiry } from '../../utils/jwt.js';
 import { paginationArgs, buildPageInfo } from '../../utils/format.js';
@@ -28,7 +28,13 @@ export const authResolvers = {
       if (!ctx.user) return null;
       return ctx.loaders.userById.load(ctx.user.id);
     },
-
+    // inside authResolvers.Query
+    tenantStaff: async (_p, _a, ctx) => {
+      requireRole(ctx, FRANCHISE_ROLES);
+      return withTenant(ctx.rls, (trx) =>
+        trx('users').whereNull('deleted_at').orderBy('created_at', 'desc')
+      );
+    },
     users: async (_p, { pagination, search, role, status }, ctx) => {
       const user = requireAuth(ctx);
       // Franchise owners may list their own tenant's staff; platform roles list everyone.

@@ -58,7 +58,9 @@ export const authTypeDefs = /* GraphQL */ `
       search: String
       role: UserRole
       status: String
-    ): UserConnection!
+    ): UserConnection!,
+     """ Franchise owner/staff: this tenant's team members (RLS-scoped). """
+    tenantStaff: [User!]!
   }
 
   type UserConnection {
