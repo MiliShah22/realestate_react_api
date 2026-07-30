@@ -65,7 +65,18 @@ export const leadResolvers = {
   },
 
   Mutation: {
+    // ── Apply this change inside lead.js resolvers, in leadResolvers.Mutation ──
+    // Replace the start of createLead with the added role check below.
+
     createLead: async (_p, { input }, ctx) => {
+      // Franchise/platform accounts shouldn't submit customer enquiries — this
+      // mutation is for guests (ctx.user is null) or logged-in customers only.
+      if (ctx.user && ctx.user.role !== 'CUSTOMER') {
+        throw new GraphQLError('Only customer accounts can submit property enquiries.', {
+          extensions: { code: 'FORBIDDEN' },
+        });
+      }
+
       const property = await db('properties').where('id', input.propertyId).where('status', 'ACTIVE').first();
       if (!property) throw new GraphQLError('Property not found or not available.', { extensions: { code: 'NOT_FOUND' } });
 
